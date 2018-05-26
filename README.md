@@ -1,6 +1,6 @@
 QBot
 ==============
-A Discord bot written in Python to query Quake 3 servers using gameapis.net
+A Discord bot written in Python to query Quake 3 servers based on the discord.py wrapper.
 
 
 ### Installation
@@ -9,6 +9,3 @@ A Discord bot written in Python to query Quake 3 servers using gameapis.net
 - Get a token for your bot as described ![here](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)
 - Open `qbot.py` and copy/paste your token at this line `bot.run('your_token')`
 - Run ```$ python3 qbot.py``` from the terminal
-
-### Notes
-The bot uses the api provided by gameapis.net as described ![here](https://docs.gameapis.net/docs/quake3). No guarantees are made on its reliability.
