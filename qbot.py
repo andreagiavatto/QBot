@@ -40,6 +40,12 @@ async def on_ready():
     print('------')
     await set_default_status()
 
+@bot.event
+async def on_member_join(member):
+    name = member.name
+    output = 'Welcome ' + name + '!'
+    await bot.say(output)
+
 @bot.command()
 async def alias():
     aliasesOutput = 'Aliases:'
