@@ -24,6 +24,10 @@ import json
 import socket
 import re
 from discord.ext import commands
+import dns.resolver
+
+dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
 
 bot = commands.Bot(command_prefix='!', description='''A simple bot to query Quake 3 servers (protocol 68)''')
 
@@ -57,7 +61,7 @@ async def alias():
 async def q3(argument: str):
 
     if argument == 'help':
-        await bot.say('Usage: !q3 <alias> or !q3 ip:port, type !alias to see a list of known aliases')
+        await bot.say('Usage: !q3 <alias> or !q3 ip(:port) or !q3 hostname(:port), type !alias to see a list of known aliases')
         return
 
     if argument == '127.0.0.1':
@@ -77,6 +81,13 @@ async def q3(argument: str):
     port = 27960
     if len(query) > 1:
         port = int(query[1])
+    if not isValidIp(ip):
+        resolvedIps = await resolveHost(ip)
+        if len(resolvedIps) == 0:
+            await bot.say("I couldn't resolve that domain")
+            return
+        else:
+            ip = resolvedIps[0]
 
     status = await getServerStatus(ip, port)
     if status is None:
@@ -152,6 +163,18 @@ def parsePlayers(playersList: [str]):
             playerData = p.split() # score ping name
             players.append(playerData)
     return players
+
+def isValidIp(ip: str):
+   components = ip.strip().split(".")
+   return len(components) == 4
+
+async def resolveHost(domain: str):
+    result = dns.resolver.query(domain, "A")
+    answer = ''
+    ips = []
+    for item in result:
+        ips.append(str(item))
+    return ips
 
 @bot.event
 async def set_default_status():
