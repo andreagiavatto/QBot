@@ -32,7 +32,7 @@ dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
 bot = commands.Bot(command_prefix='!', description='''A simple bot to query Quake 3 servers (protocol 68)''')
 
 aliases = {
-    # alias as 'a': '1.1.1.1:1111'
+    #'alias': '1.1.1.1:27960',
 }
 nameRegex = '\^+[a-z0-9]'
 
@@ -100,24 +100,24 @@ async def q3(argument: str):
         currentMap = serverInfo['mapname']
         playersNumber = str(len(playersList)) + '/' + serverInfo['sv_maxclients']
 
-        embed = discord.Embed(title=name, description='', colour=0x3c9824)
-        embed.add_field(name='Server IP', value=ip+':'+str(port), inline=True)
+        embed = discord.Embed(title=name, description=ip+':'+str(port), colour=0x3c9824, type='rich')
         embed.add_field(name='Map', value=currentMap, inline=True)
 
         if len(playersList) > 0:
-            embed.add_field(name='Players', value=playersNumber, inline=True)
+            embed.add_field(name='Players', value=playersNumber, inline=False)
             players = []
             scores = []
             pings = []
 
             for p in playersList:
-                players.append(re.sub(nameRegex, '', p[2]))
+                p_name = re.sub(nameRegex, '', p[2])
+                players.append(p_name.strip("\""))
                 scores.append(p[0])
                 pings.append(p[1]+ 'ms')
 
-            embed.add_field(name='Player', value='\n'.join(players), inline=True)
-            embed.add_field(name='Score', value='\n'.join(scores), inline=True)
-            embed.add_field(name='Ping', value='\n'.join(pings), inline=True)
+            embed.add_field(name='Player', value='```http\n' + '\n'.join(players) + '```' , inline=True)
+            embed.add_field(name='Score', value='```http\n'  + '\n'.join(scores) + '```' , inline=True)
+            embed.add_field(name='Ping', value='```http\n' + '\n'.join(pings) + '```', inline=True)
 
         await bot.say(embed=embed)
 
@@ -180,4 +180,4 @@ async def resolveHost(domain: str):
 async def set_default_status():
     await bot.change_presence(game=discord.Game(name='noobs getting owned', type=3))
 
-bot.run('your_token')
+bot.run('<your_token>')
