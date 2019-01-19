@@ -32,7 +32,7 @@ dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
 bot = commands.Bot(command_prefix='!', description='''A simple bot to query Quake 3 servers (protocol 68)''')
 
 aliases = {
-    #'alias': '1.1.1.1:27960',
+    #'alias': '1.1.1.1:1111',
 }
 nameRegex = '\^+[a-z0-9]'
 
@@ -52,10 +52,15 @@ async def on_member_join(member):
 
 @bot.command()
 async def alias():
-    aliasesOutput = 'Aliases:'
+    embed = discord.Embed(title='', description='', colour=0x3c9824, type='rich')
+    names = []
+    ips = []
     for key, value in aliases.items():
-        aliasesOutput = aliasesOutput + '\n' + key
-    await bot.say(aliasesOutput)
+        names.append(key)
+        ips.append(value)
+    embed.add_field(name='Alias', value='```http\n' + '\n'.join(names) + '```' , inline=True)
+    embed.add_field(name='Hostname', value='```http\n'  + '\n'.join(ips) + '```' , inline=True)
+    await bot.say(embed=embed)
 
 @bot.command()
 async def q3(argument: str):
