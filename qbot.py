@@ -32,7 +32,7 @@ dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
 bot = commands.Bot(command_prefix='!', description='''A simple bot to query Quake 3 servers (protocol 68)''')
 
 aliases = {
-    #'alias': '1.1.1.1:1111',
+    #'alias': '1.1.1.1:27960',
 }
 nameRegex = '\^+[a-z0-9]'
 
@@ -58,8 +58,8 @@ async def alias():
     for key, value in aliases.items():
         names.append(key)
         ips.append(value)
-    embed.add_field(name='Alias', value='```http\n' + '\n'.join(names) + '```' , inline=True)
-    embed.add_field(name='Hostname', value='```http\n'  + '\n'.join(ips) + '```' , inline=True)
+    embed.add_field(name='Alias', value='\n'.join(names), inline=True)
+    embed.add_field(name='Hostname', value='\n'.join(ips), inline=True)
     await bot.say(embed=embed)
 
 @bot.command()
@@ -185,4 +185,4 @@ async def resolveHost(domain: str):
 async def set_default_status():
     await bot.change_presence(game=discord.Game(name='noobs getting owned', type=3))
 
-bot.run('<your_token>')
+bot.run('your_token')
