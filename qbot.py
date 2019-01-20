@@ -53,11 +53,12 @@ async def on_member_join(member):
 @bot.command()
 async def alias():
     embed = discord.Embed(title='', description='', colour=0x3c9824, type='rich')
+    sorted_keys = sorted(list(aliases.keys()), key=str.lower)
     names = []
     ips = []
-    for key, value in aliases.items():
+    for key in sorted_keys:
         names.append(key)
-        ips.append(value)
+        ips.append(aliases[key])
     embed.add_field(name='Alias', value='\n'.join(names), inline=True)
     embed.add_field(name='Hostname', value='\n'.join(ips), inline=True)
     await bot.say(embed=embed)
