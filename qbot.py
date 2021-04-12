@@ -168,7 +168,7 @@ def isValidIp(ip: str):
    return len(components) == 4
 
 async def resolveHost(domain: str):
-    result = dns.resolver.query(domain, "A")
+    result = dns.resolver.resolve(domain, "A")
     answer = ''
     ips = []
     for item in result:
