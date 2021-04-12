@@ -32,7 +32,7 @@ dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
 bot = commands.Bot(command_prefix='!', description='''A simple bot to query Quake 3 servers (protocol 68)''')
 
 aliases = {
-    #'alias': '1.1.1.1:27960',
+    #'alias': '1.1.1.1:27960'
 }
 nameRegex = '\^+[a-z0-9]'
 
@@ -42,16 +42,9 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
-    await set_default_status()
-
-@bot.event
-async def on_member_join(member):
-    name = member.name
-    output = 'Welcome ' + name + '!'
-    await bot.say(output)
 
 @bot.command()
-async def alias():
+async def alias(context):
     embed = discord.Embed(title='', description='', colour=0x3c9824, type='rich')
     sorted_keys = sorted(list(aliases.keys()), key=str.lower)
     names = []
@@ -61,17 +54,17 @@ async def alias():
         ips.append(aliases[key])
     embed.add_field(name='Alias', value='\n'.join(names), inline=True)
     embed.add_field(name='Hostname', value='\n'.join(ips), inline=True)
-    await bot.say(embed=embed)
+    await context.send(embed=embed)
 
 @bot.command()
-async def q3(argument: str):
+async def q3(context, argument: str):
 
     if argument == 'help':
-        await bot.say('Usage: !q3 <alias> or !q3 ip(:port) or !q3 hostname(:port), type !alias to see a list of known aliases')
+        await context.send('Usage: !q3 <alias> or !q3 ip(:port) or !q3 hostname(:port), type !alias to see a list of known aliases')
         return
 
     if argument == '127.0.0.1':
-        await bot.say('There is no place like home')
+        await context.send('There is no place like home')
         return
 
     # check if alias first
@@ -90,14 +83,14 @@ async def q3(argument: str):
     if not isValidIp(ip):
         resolvedIps = await resolveHost(ip)
         if len(resolvedIps) == 0:
-            await bot.say("I couldn't resolve that domain")
+            await context.send("I couldn't resolve that domain")
             return
         else:
             ip = resolvedIps[0]
 
     status = await getServerStatus(ip, port)
     if status is None:
-        await bot.say('There was an error fetching server status')
+        await context.send('There was an error fetching server status')
     else:
         serverInfo = status[0]
         playersList = status[1]
@@ -125,7 +118,7 @@ async def q3(argument: str):
             embed.add_field(name='Score', value='```http\n'  + '\n'.join(scores) + '```' , inline=True)
             embed.add_field(name='Ping', value='```http\n' + '\n'.join(pings) + '```', inline=True)
 
-        await bot.say(embed=embed)
+        await context.send(embed=embed)
 
 async def getServerStatus(ip: str, port: int):
     try:
