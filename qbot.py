@@ -25,6 +25,7 @@ import socket
 import re
 from discord.ext import commands
 import dns.resolver
+import numpy as np
 
 dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
 dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
@@ -58,18 +59,12 @@ async def alias(context):
 
 @bot.command()
 async def q3(context, argument: str):
-
     if argument == 'help':
         await context.send('Usage: !q3 <alias> or !q3 ip(:port) or !q3 hostname(:port), type !alias to see a list of known aliases')
         return
-
-    if argument == '127.0.0.1':
-        await context.send('There is no place like home')
-        return
-
-    # check if alias first
+    
     queryServer = argument
-    for key, value in aliases.items():
+    for key, value in aliases.items(): # check if alias first
         if key == argument:
             queryServer = value
             break
@@ -89,6 +84,7 @@ async def q3(context, argument: str):
             ip = resolvedIps[0]
 
     status = await getServerStatus(ip, port)
+
     if status is None:
         await context.send('There was an error fetching server status')
     else:
@@ -97,28 +93,84 @@ async def q3(context, argument: str):
 
         name = re.sub(nameRegex, '', serverInfo['sv_hostname'])
         currentMap = serverInfo['mapname']
-        playersNumber = str(len(playersList)) + '/' + serverInfo['sv_maxclients']
-
+        
         embed = discord.Embed(title=name, description=ip+':'+str(port), colour=0x3c9824, type='rich')
         embed.add_field(name='Map', value=currentMap, inline=True)
 
-        if len(playersList) > 0:
-            embed.add_field(name='Players', value=playersNumber, inline=False)
-            players = []
-            scores = []
-            pings = []
-
-            for p in playersList:
-                p_name = re.sub(nameRegex, '', p[2])
-                players.append(p_name.strip("\""))
-                scores.append(p[0])
-                pings.append(p[1]+ 'ms')
-
-            embed.add_field(name='Player', value='```http\n' + '\n'.join(players) + '```' , inline=True)
-            embed.add_field(name='Score', value='```http\n'  + '\n'.join(scores) + '```' , inline=True)
-            embed.add_field(name='Ping', value='```http\n' + '\n'.join(pings) + '```', inline=True)
+        is_team_game = serverInfo['g_gametype'] == '3' or serverInfo['g_gametype'] == '4'
+        if is_team_game:
+            customiseEmbedForTeamGame(embed, serverInfo, playersList)
+        else:
+            customiseEmbedForGenericGame(embed, serverInfo, playersList)
 
         await context.send(embed=embed)
+
+def customiseEmbedForTeamGame(embed, serverInfo, playersList):
+    if len(playersList) > 0:
+        playersNumber = str(len(playersList)) + '/' + serverInfo['sv_maxclients']
+        embed.add_field(name='Players', value=playersNumber, inline=True)
+
+        score_red = serverInfo['score_red']
+        score_blue = serverInfo['score_blue']
+        embed.add_field(name='Score Red', value=score_red, inline=False)
+        embed.add_field(name='Score Blue', value=score_blue, inline=False)
+
+        if 'players_blue' in serverInfo and 'players_red' in serverInfo:
+            players_in_blue_team = serverInfo['players_blue'].split()
+            players_in_red_team = serverInfo['players_red'].split()
+            team_red = []
+            team_blue = []
+            team_spec = []
+            for index, player in enumerate(playersList):
+                if str(index + 1) in players_in_blue_team:
+                    team_blue.append(player)
+                elif str(index + 1) in players_in_red_team:
+                    team_red.append(player)
+                else:
+                    team_spec.append(player)
+        
+            sortPlayersByScore(team_red)
+            addPlayersToEmbed(embed, team_red, 'Team Red')
+            addPlayersToEmbed(embed, team_blue, 'Team Blue')
+            if len(team_spec) > 0:
+                addPlayersToEmbed(embed, team_spec, 'Spectators')
+        else: # all players in spec
+            addPlayersToEmbed(embed, playersList, 'Spectators')
+
+def customiseEmbedForGenericGame(embed, serverInfo, playersList):
+    if len(playersList) > 0:
+        playersNumber = str(len(playersList)) + '/' + serverInfo['sv_maxclients']
+        embed.add_field(name='Players', value=playersNumber, inline=False)
+        addPlayersToEmbed(embed, playersList, 'Player')
+
+def addPlayersToEmbed(embed, playersList, teamName):
+    sorted = sortPlayersByScore(playersList)
+
+    embed.add_field(name=teamName, value='```\n' + '\n'.join(sorted[0]) + '```' , inline=True)
+    embed.add_field(name='Score', value='```\n'  + '\n'.join(sorted[1]) + '```' , inline=True)
+    embed.add_field(name='Ping', value='```\n' + '\n'.join(sorted[2]) + '```', inline=True)
+
+def sortPlayersByScore(playersList):
+    sorted_players = []
+    sorted_scores = []
+    sorted_pings = []
+    players = []
+    scores = []
+    pings = []
+    if len(playersList) > 0:
+        for p in playersList:
+            p_name = re.sub(nameRegex, '', p[2])
+            players.append(p_name.strip("\""))
+            scores.append(int(p[0]))
+            pings.append(p[1]+ 'ms')
+    converted_scores = np.array(scores)
+    indexes = np.argsort(converted_scores)
+    reversed_indexes = indexes[::-1]
+    for i in reversed_indexes:
+        sorted_players.append(players[i])
+        sorted_scores.append(str(scores[i]))
+        sorted_pings.append(pings[i])
+    return (sorted_players, sorted_scores, sorted_pings)
 
 async def getServerStatus(ip: str, port: int):
     try:
