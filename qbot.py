@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Andrea Giavatto
+# Copyright (c) 2022 Andrea Giavatto
 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -30,7 +30,9 @@ import numpy as np
 dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
 dns.resolver.default_resolver.nameservers = ['1.1.1.1'] #cloudflare dns
 
-bot = commands.Bot(command_prefix='!', description='''A simple bot to query Quake 3 servers (protocol 68)''')
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix='!', intents=intents, description='''A simple bot to query Quake 3 servers (protocol 68)''')
 
 aliases = {
     #'alias': '1.1.1.1:27960'
@@ -231,4 +233,4 @@ async def resolveHost(domain: str):
 async def set_default_status():
     await bot.change_presence(game=discord.Game(name='noobs getting owned', type=3))
 
-bot.run('your_token')
+bot.run('your_token_here')
